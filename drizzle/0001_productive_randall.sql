@@ -1,0 +1,2 @@
+CREATE TYPE "public"."user_role" AS ENUM('student', 'trainer', 'institution', 'programme_manager', 'monitoring_officer');--> statement-breakpoint
+ALTER TABLE "user" ADD COLUMN "role" "user_role" DEFAULT 'student';
