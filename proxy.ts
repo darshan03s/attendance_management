@@ -45,6 +45,26 @@ export default clerkMiddleware(async (auth, request) => {
     return NextResponse.redirect(new URL('/', request.url))
   }
 
+  // Role-based route protection
+  const role = existingUser?.role
+  const pathname = request.nextUrl.pathname
+
+  const roleRouteMap: Record<string, string> = {
+    student: '/student',
+    trainer: '/trainer',
+    institution: '/institution',
+    programme_manager: '/programme_manager',
+    monitoring_officer: '/monitoring_officer'
+  }
+
+  if (role) {
+    for (const [routeRole, routePrefix] of Object.entries(roleRouteMap)) {
+      if (pathname.startsWith(routePrefix) && role !== routeRole) {
+        return NextResponse.redirect(new URL(roleRouteMap[role], request.url))
+      }
+    }
+  }
+
   const headers = new Headers(request.headers)
   headers.set('x-user-id', userId)
 
