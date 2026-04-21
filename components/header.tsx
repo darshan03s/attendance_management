@@ -6,7 +6,7 @@ const Header = () => {
     <header className="flex justify-between items-center px-2 gap-4 h-12 border-b sticky top-0 left-0 z-10 bg-background">
       <div className="header-left">
         <Link href={'/'} className="text-sm">
-          Attendance management
+          Skillbridge
         </Link>
       </div>
       <div className="header-right flex items-center gap-4">
