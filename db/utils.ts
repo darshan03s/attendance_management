@@ -243,3 +243,10 @@ export const getAttendanceBySessionAndStudent = async (sessionId: string, studen
     where: and(eq(attendance.sessionId, sessionId), eq(attendance.studentId, studentId))
   })
 }
+
+export const getAttendanceByStudent = async (studentId: string, sessionIds: string[]) => {
+  if (sessionIds.length === 0) return []
+  return await db.query.attendance.findMany({
+    where: and(eq(attendance.studentId, studentId), inArray(attendance.sessionId, sessionIds))
+  })
+}

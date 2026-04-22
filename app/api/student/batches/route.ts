@@ -1,4 +1,9 @@
-import { getBatchesByStudent, getSessionsByBatch, getUserById } from '@/db/utils'
+import {
+  getAttendanceByStudent,
+  getBatchesByStudent,
+  getSessionsByBatch,
+  getUserById
+} from '@/db/utils'
 import { NextRequest, NextResponse } from 'next/server'
 
 export async function GET(request: NextRequest) {
@@ -16,11 +21,20 @@ export async function GET(request: NextRequest) {
 
   const batches = await getBatchesByStudent(userId)
 
-  // Enrich batches with their sessions
+  // Enrich batches with their sessions and attendance status
   const batchesWithSessions = await Promise.all(
     batches.map(async (b) => {
       const sessions = await getSessionsByBatch(b.id)
-      return { ...b, sessions }
+      const sessionIds = sessions.map((s) => s.id)
+      const attendanceRecords = await getAttendanceByStudent(userId, sessionIds)
+      const attendedSessionIds = new Set(attendanceRecords.map((a) => a.sessionId))
+
+      const sessionsWithAttendance = sessions.map((s) => ({
+        ...s,
+        attended: attendedSessionIds.has(s.id)
+      }))
+
+      return { ...b, sessions: sessionsWithAttendance }
     })
   )
 

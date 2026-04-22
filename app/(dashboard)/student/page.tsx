@@ -15,6 +15,7 @@ interface Session {
   startTime: string
   endTime: string
   createdAt: string
+  attended: boolean
 }
 
 interface Batch {
@@ -116,7 +117,7 @@ const StudentPage = () => {
     fetchBatches()
   }, [fetchBatches])
 
-  const handleMarkAttendance = async (sessionId: string) => {
+  const handleMarkAttendance = async (sessionId: string, batchId: string) => {
     setMarkingSession(sessionId)
     try {
       const res = await fetch('/api/student/attendance', {
@@ -130,6 +131,17 @@ const StudentPage = () => {
         return
       }
       toast.success('Attendance marked successfully!')
+      // Update local state to reflect attendance
+      setBatches((prev) =>
+        prev.map((b) =>
+          b.id === batchId
+            ? {
+                ...b,
+                sessions: b.sessions.map((s) => (s.id === sessionId ? { ...s, attended: true } : s))
+              }
+            : b
+        )
+      )
     } catch {
       toast.error('Something went wrong')
     } finally {
@@ -177,17 +189,26 @@ const StudentPage = () => {
                               {formatTime(result.session.endTime)}
                             </span>
                           </div>
-                          <Button
-                            size="sm"
-                            className="w-full"
-                            onClick={() => handleMarkAttendance(result.session.id)}
-                            disabled={markingSession === result.session.id}
-                          >
-                            {markingSession === result.session.id ? (
-                              <Loader2 className="size-4 animate-spin mr-2" />
-                            ) : null}
-                            Mark Attendance
-                          </Button>
+                          {result.session.attended ? (
+                            <div className="flex items-center gap-2 rounded-md bg-green-50 dark:bg-green-950/30 px-3 py-2">
+                              <CheckCircle2 className="size-4 text-green-600 dark:text-green-400" />
+                              <span className="text-sm font-medium text-green-700 dark:text-green-300">
+                                Attendance Marked
+                              </span>
+                            </div>
+                          ) : (
+                            <Button
+                              size="sm"
+                              className="w-full"
+                              onClick={() => handleMarkAttendance(result.session.id, batch.id)}
+                              disabled={markingSession === result.session.id}
+                            >
+                              {markingSession === result.session.id ? (
+                                <Loader2 className="size-4 animate-spin mr-2" />
+                              ) : null}
+                              Mark Attendance
+                            </Button>
+                          )}
                         </div>
                       ) : (
                         <div className="space-y-1.5">
@@ -209,13 +230,21 @@ const StudentPage = () => {
                       )}
                     </>
                   ) : (
-                    <div className="flex items-center gap-2">
-                      <CheckCircle2 className="size-4 text-muted-foreground" />
-                      <span className="text-sm text-muted-foreground">
-                        {batch.sessions.length === 0
-                          ? 'No sessions scheduled'
-                          : 'All sessions completed'}
-                      </span>
+                    <div className="space-y-2">
+                      <div className="flex items-center gap-2">
+                        <CheckCircle2 className="size-4 text-muted-foreground" />
+                        <span className="text-sm text-muted-foreground">
+                          {batch.sessions.length === 0
+                            ? 'No sessions scheduled'
+                            : 'All sessions completed'}
+                        </span>
+                      </div>
+                      {batch.sessions.length > 0 && (
+                        <p className="text-xs text-muted-foreground">
+                          Attended {batch.sessions.filter((s) => s.attended).length} of{' '}
+                          {batch.sessions.length} sessions
+                        </p>
+                      )}
                     </div>
                   )}
                 </CardContent>
