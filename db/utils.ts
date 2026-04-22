@@ -260,3 +260,22 @@ export const getAttendanceByStudent = async (studentId: string, sessionIds: stri
     where: and(eq(attendance.studentId, studentId), inArray(attendance.sessionId, sessionIds))
   })
 }
+
+export const getStudentsByBatch = async (batchId: string) => {
+  const assignments = await db.query.batchStudents.findMany({
+    where: eq(batchStudents.batchId, batchId)
+  })
+
+  if (assignments.length === 0) return []
+
+  const studentIds = assignments.map((a) => a.studentId)
+  return await db.query.user.findMany({
+    where: inArray(user.id, studentIds)
+  })
+}
+
+export const getAttendanceBySession = async (sessionId: string) => {
+  return await db.query.attendance.findMany({
+    where: eq(attendance.sessionId, sessionId)
+  })
+}

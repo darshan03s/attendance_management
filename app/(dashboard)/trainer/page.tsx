@@ -5,6 +5,7 @@ import { toast } from 'sonner'
 import { Loader2 } from 'lucide-react'
 import BatchInviteDialog from '@/components/batch-invite-dialog'
 import CreateSessionDialog from '@/components/create-session-dialog'
+import SessionAttendanceDialog from '@/components/session-attendance-dialog'
 import {
   Table,
   TableBody,
@@ -151,6 +152,7 @@ const TrainerPage = () => {
                   <TableHead>Start Time</TableHead>
                   <TableHead>End Time</TableHead>
                   <TableHead>Created At</TableHead>
+                  <TableHead>Attendance</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -172,6 +174,17 @@ const TrainerPage = () => {
                         month: 'short',
                         year: 'numeric'
                       })}
+                    </TableCell>
+                    <TableCell>
+                      {new Date(`${session.date}T${session.startTime}`) <= new Date() ? (
+                        <SessionAttendanceDialog
+                          sessionId={session.id}
+                          batchName={session.batchName}
+                          date={session.date}
+                        />
+                      ) : (
+                        <span className="text-xs text-muted-foreground">-</span>
+                      )}
                     </TableCell>
                   </TableRow>
                 ))}
