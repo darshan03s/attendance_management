@@ -1,6 +1,14 @@
 import { and, eq, inArray, isNull } from 'drizzle-orm'
 import { db } from '.'
-import { batch, batchInvite, batchStudents, batchTrainers, session, user } from './schema'
+import {
+  attendance,
+  batch,
+  batchInvite,
+  batchStudents,
+  batchTrainers,
+  session,
+  user
+} from './schema'
 import { UserRole } from '@/types'
 
 export const getUserById = async (userId: string) => {
@@ -203,4 +211,35 @@ export const getSessionsByTrainer = async (trainerId: string) => {
     ...s,
     batchName: batchMap.get(s.batchId) ?? 'Unknown'
   }))
+}
+
+export const getSessionsByBatch = async (batchId: string) => {
+  return await db.query.session.findMany({
+    where: eq(session.batchId, batchId)
+  })
+}
+
+export const markAttendance = async (sessionId: string, studentId: string) => {
+  // Check if already marked
+  const existing = await db.query.attendance.findFirst({
+    where: and(eq(attendance.sessionId, sessionId), eq(attendance.studentId, studentId))
+  })
+
+  if (existing) return existing
+
+  return await db
+    .insert(attendance)
+    .values({
+      id: crypto.randomUUID(),
+      sessionId,
+      studentId,
+      status: 'present'
+    })
+    .returning()
+}
+
+export const getAttendanceBySessionAndStudent = async (sessionId: string, studentId: string) => {
+  return await db.query.attendance.findFirst({
+    where: and(eq(attendance.sessionId, sessionId), eq(attendance.studentId, studentId))
+  })
 }

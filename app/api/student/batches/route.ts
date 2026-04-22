@@ -1,4 +1,4 @@
-import { getBatchesByStudent, getUserById } from '@/db/utils'
+import { getBatchesByStudent, getSessionsByBatch, getUserById } from '@/db/utils'
 import { NextRequest, NextResponse } from 'next/server'
 
 export async function GET(request: NextRequest) {
@@ -16,5 +16,13 @@ export async function GET(request: NextRequest) {
 
   const batches = await getBatchesByStudent(userId)
 
-  return NextResponse.json({ data: batches })
+  // Enrich batches with their sessions
+  const batchesWithSessions = await Promise.all(
+    batches.map(async (b) => {
+      const sessions = await getSessionsByBatch(b.id)
+      return { ...b, sessions }
+    })
+  )
+
+  return NextResponse.json({ data: batchesWithSessions })
 }
