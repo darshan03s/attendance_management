@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from 'react'
 import { toast } from 'sonner'
 import { Loader2 } from 'lucide-react'
 import BatchInviteDialog from '@/components/batch-invite-dialog'
+import BatchStudentsDialog from '@/components/batch-students-dialog'
 import CreateSessionDialog from '@/components/create-session-dialog'
 import SessionAttendanceDialog from '@/components/session-attendance-dialog'
 import {
@@ -103,6 +104,7 @@ const TrainerPage = () => {
                 <TableRow>
                   <TableHead>Name</TableHead>
                   <TableHead>Created At</TableHead>
+                  <TableHead>Students</TableHead>
                   <TableHead>Invite Link</TableHead>
                   <TableHead>Create Session</TableHead>
                 </TableRow>
@@ -117,6 +119,9 @@ const TrainerPage = () => {
                         month: 'short',
                         year: 'numeric'
                       })}
+                    </TableCell>
+                    <TableCell>
+                      <BatchStudentsDialog batchId={batch.id} batchName={batch.name} />
                     </TableCell>
                     <TableCell>
                       <BatchInviteDialog batchId={batch.id} batchName={batch.name} />
