@@ -1,4 +1,5 @@
 import {
+  checkStudentInBatch,
   getAttendanceBySessionAndStudent,
   getSessionById,
   getUserById,
@@ -30,6 +31,12 @@ export async function POST(request: NextRequest) {
   const sessionData = await getSessionById(sessionId)
   if (!sessionData) {
     return NextResponse.json({ error: 'Session not found' }, { status: 404 })
+  }
+
+  const isStudentInBatch = await checkStudentInBatch(sessionData.batchId, userId)
+
+  if (!isStudentInBatch) {
+    return NextResponse.json({ error: 'You are not enrolled in this batch' }, { status: 403 })
   }
 
   // Check if already marked
