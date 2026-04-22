@@ -1,6 +1,6 @@
 import { eq } from 'drizzle-orm'
 import { db } from '.'
-import { user } from './schema'
+import { batch, user } from './schema'
 import { UserRole } from '@/types'
 
 export const getUserById = async (userId: string) => {
@@ -25,4 +25,21 @@ export const addNewUser = async (
       role
     })
     .returning()
+}
+
+export const createBatch = async (name: string, institutionId: string) => {
+  return await db
+    .insert(batch)
+    .values({
+      id: crypto.randomUUID(),
+      name,
+      institutionId
+    })
+    .returning()
+}
+
+export const getBatchesByInstitution = async (institutionId: string) => {
+  return await db.query.batch.findMany({
+    where: eq(batch.institutionId, institutionId)
+  })
 }
