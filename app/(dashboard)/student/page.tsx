@@ -134,7 +134,7 @@ const StudentPage = () => {
   const handleMarkAttendance = async (sessionId: string, batchId: string) => {
     setMarkingSession(sessionId)
     try {
-      const res = await fetch('/api/student/attendance', {
+      const res = await fetch('/api/attendance/mark', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ sessionId })
