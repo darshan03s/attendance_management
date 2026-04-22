@@ -1,6 +1,6 @@
 import { and, eq, inArray, isNull } from 'drizzle-orm'
 import { db } from '.'
-import { batch, batchTrainers, user } from './schema'
+import { batch, batchInvite, batchTrainers, user } from './schema'
 import { UserRole } from '@/types'
 
 export const getUserById = async (userId: string) => {
@@ -93,4 +93,44 @@ export const getTrainersByBatch = async (batchId: string) => {
   return await db.query.user.findMany({
     where: inArray(user.id, trainerIds)
   })
+}
+
+export const getTrainerBatchAssignment = async (batchId: string, trainerId: string) => {
+  return await db.query.batchTrainers.findFirst({
+    where: and(eq(batchTrainers.batchId, batchId), eq(batchTrainers.trainerId, trainerId))
+  })
+}
+
+export const getBatchesByTrainer = async (trainerId: string) => {
+  const assignments = await db.query.batchTrainers.findMany({
+    where: eq(batchTrainers.trainerId, trainerId)
+  })
+
+  if (assignments.length === 0) return []
+
+  const batchIds = assignments.map((a) => a.batchId)
+  return await db.query.batch.findMany({
+    where: inArray(batch.id, batchIds)
+  })
+}
+
+export const getActiveInviteByBatch = async (batchId: string) => {
+  return await db.query.batchInvite.findFirst({
+    where: and(eq(batchInvite.batchId, batchId), eq(batchInvite.isActive, true))
+  })
+}
+
+export const deactivateInvitesByBatch = async (batchId: string) => {
+  return await db
+    .update(batchInvite)
+    .set({ isActive: false })
+    .where(and(eq(batchInvite.batchId, batchId), eq(batchInvite.isActive, true)))
+}
+
+export const createBatchInvite = async (batchId: string, trainerId: string) => {
+  await deactivateInvitesByBatch(batchId)
+  return await db
+    .insert(batchInvite)
+    .values({ id: crypto.randomUUID(), batchId, createdBy: trainerId })
+    .returning()
 }
