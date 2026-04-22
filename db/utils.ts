@@ -1,6 +1,6 @@
 import { and, eq, inArray, isNull } from 'drizzle-orm'
 import { db } from '.'
-import { batch, batchInvite, batchTrainers, user } from './schema'
+import { batch, batchInvite, batchStudents, batchTrainers, user } from './schema'
 import { UserRole } from '@/types'
 
 export const getUserById = async (userId: string) => {
@@ -133,4 +133,33 @@ export const createBatchInvite = async (batchId: string, trainerId: string) => {
     .insert(batchInvite)
     .values({ id: crypto.randomUUID(), batchId, createdBy: trainerId })
     .returning()
+}
+
+export const getInviteById = async (inviteId: string) => {
+  return await db.query.batchInvite.findFirst({
+    where: eq(batchInvite.id, inviteId)
+  })
+}
+
+export const checkStudentInBatch = async (batchId: string, studentId: string) => {
+  return await db.query.batchStudents.findFirst({
+    where: and(eq(batchStudents.batchId, batchId), eq(batchStudents.studentId, studentId))
+  })
+}
+
+export const addStudentToBatch = async (batchId: string, studentId: string) => {
+  return await db.insert(batchStudents).values({ batchId, studentId }).returning()
+}
+
+export const getBatchesByStudent = async (studentId: string) => {
+  const assignments = await db.query.batchStudents.findMany({
+    where: eq(batchStudents.studentId, studentId)
+  })
+
+  if (assignments.length === 0) return []
+
+  const batchIds = assignments.map((a) => a.batchId)
+  return await db.query.batch.findMany({
+    where: inArray(batch.id, batchIds)
+  })
 }
