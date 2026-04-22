@@ -2,9 +2,10 @@
 
 import { useCallback, useEffect, useState } from 'react'
 import { toast } from 'sonner'
-import { CalendarDays, CheckCircle2, Clock, Loader2, Radio } from 'lucide-react'
+import { CalendarDays, CheckCircle2, Clock, Loader2, Radio, AlertCircle } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
+import { Badge } from '@/components/ui/badge'
 
 interface Session {
   id: string
@@ -24,6 +25,19 @@ interface Batch {
   institutionId: string
   createdAt: string
   sessions: Session[]
+}
+
+type AttendanceWindow = 'not_started' | 'present' | 'late' | 'closed'
+
+function getAttendanceWindow(session: Session, now: Date): AttendanceWindow {
+  const sessionStart = new Date(`${session.date}T${session.startTime}`)
+  const sessionEnd = new Date(`${session.date}T${session.endTime}`)
+  const lateThreshold = new Date(sessionStart.getTime() + 15 * 60 * 1000)
+
+  if (now < sessionStart) return 'not_started'
+  if (now <= lateThreshold) return 'present'
+  if (now <= sessionEnd) return 'late'
+  return 'closed'
 }
 
 type SessionStatus = 'live' | 'upcoming' | 'completed'
@@ -149,6 +163,88 @@ const StudentPage = () => {
     }
   }
 
+  const renderSessionCard = (batch: Batch, result: { session: Session; status: SessionStatus }) => {
+    const { session, status } = result
+    const window = getAttendanceWindow(session, now)
+
+    if (status === 'live') {
+      return (
+        <div className="space-y-3">
+          <div className="flex items-center gap-2">
+            <Radio className="size-4 text-green-500 animate-pulse" />
+            <span className="text-sm font-medium text-green-600 dark:text-green-400">Live Now</span>
+            {window === 'late' && (
+              <Badge
+                variant="outline"
+                className="text-yellow-600 border-yellow-300 dark:text-yellow-400 dark:border-yellow-600 text-xs"
+              >
+                Late window
+              </Badge>
+            )}
+          </div>
+          <div className="flex items-center gap-2 text-muted-foreground text-sm">
+            <Clock className="size-3.5" />
+            <span>
+              {formatTime(session.startTime)} - {formatTime(session.endTime)}
+            </span>
+          </div>
+          {session.attended ? (
+            <div className="flex items-center gap-2 rounded-md bg-green-50 dark:bg-green-950/30 px-3 py-2">
+              <CheckCircle2 className="size-4 text-green-600 dark:text-green-400" />
+              <span className="text-sm font-medium text-green-700 dark:text-green-300">
+                Attendance Marked
+              </span>
+            </div>
+          ) : window === 'closed' ? (
+            <div className="flex items-center gap-2 rounded-md bg-red-50 dark:bg-red-950/30 px-3 py-2">
+              <AlertCircle className="size-4 text-red-600 dark:text-red-400" />
+              <span className="text-sm font-medium text-red-700 dark:text-red-300">
+                Attendance closed
+              </span>
+            </div>
+          ) : (
+            <Button
+              size="sm"
+              className="w-full"
+              onClick={() => handleMarkAttendance(session.id, batch.id)}
+              disabled={markingSession === session.id}
+            >
+              {markingSession === session.id ? (
+                <Loader2 className="size-4 animate-spin mr-2" />
+              ) : null}
+              Mark Attendance
+            </Button>
+          )}
+        </div>
+      )
+    }
+
+    // Upcoming session
+    return (
+      <div className="space-y-1.5">
+        <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+          Next Session
+        </p>
+        <div className="flex items-center gap-2 text-sm">
+          <CalendarDays className="size-3.5 text-muted-foreground" />
+          <span>{formatDate(session.date)}</span>
+        </div>
+        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+          <Clock className="size-3.5" />
+          <span>
+            {formatTime(session.startTime)} - {formatTime(session.endTime)}
+          </span>
+        </div>
+        {window === 'not_started' && (
+          <div className="flex items-center gap-2 rounded-md bg-muted/50 px-3 py-2 mt-2">
+            <Clock className="size-4 text-muted-foreground" />
+            <span className="text-sm text-muted-foreground">Session not started</span>
+          </div>
+        )}
+      </div>
+    )
+  }
+
   return (
     <div className="px-2 space-y-4">
       <h2 className="text-lg font-semibold">My Batches</h2>
@@ -173,62 +269,7 @@ const StudentPage = () => {
                 </CardHeader>
                 <CardContent className="space-y-3">
                   {result ? (
-                    <>
-                      {result.status === 'live' ? (
-                        <div className="space-y-3">
-                          <div className="flex items-center gap-2">
-                            <Radio className="size-4 text-green-500 animate-pulse" />
-                            <span className="text-sm font-medium text-green-600 dark:text-green-400">
-                              Live Now
-                            </span>
-                          </div>
-                          <div className="flex items-center gap-2 text-muted-foreground text-sm">
-                            <Clock className="size-3.5" />
-                            <span>
-                              {formatTime(result.session.startTime)} -{' '}
-                              {formatTime(result.session.endTime)}
-                            </span>
-                          </div>
-                          {result.session.attended ? (
-                            <div className="flex items-center gap-2 rounded-md bg-green-50 dark:bg-green-950/30 px-3 py-2">
-                              <CheckCircle2 className="size-4 text-green-600 dark:text-green-400" />
-                              <span className="text-sm font-medium text-green-700 dark:text-green-300">
-                                Attendance Marked
-                              </span>
-                            </div>
-                          ) : (
-                            <Button
-                              size="sm"
-                              className="w-full"
-                              onClick={() => handleMarkAttendance(result.session.id, batch.id)}
-                              disabled={markingSession === result.session.id}
-                            >
-                              {markingSession === result.session.id ? (
-                                <Loader2 className="size-4 animate-spin mr-2" />
-                              ) : null}
-                              Mark Attendance
-                            </Button>
-                          )}
-                        </div>
-                      ) : (
-                        <div className="space-y-1.5">
-                          <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-                            Next Session
-                          </p>
-                          <div className="flex items-center gap-2 text-sm">
-                            <CalendarDays className="size-3.5 text-muted-foreground" />
-                            <span>{formatDate(result.session.date)}</span>
-                          </div>
-                          <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                            <Clock className="size-3.5" />
-                            <span>
-                              {formatTime(result.session.startTime)} -{' '}
-                              {formatTime(result.session.endTime)}
-                            </span>
-                          </div>
-                        </div>
-                      )}
-                    </>
+                    renderSessionCard(batch, result)
                   ) : (
                     <div className="space-y-2">
                       <div className="flex items-center gap-2">

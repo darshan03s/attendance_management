@@ -219,7 +219,17 @@ export const getSessionsByBatch = async (batchId: string) => {
   })
 }
 
-export const markAttendance = async (sessionId: string, studentId: string) => {
+export const getSessionById = async (sessionId: string) => {
+  return await db.query.session.findFirst({
+    where: eq(session.id, sessionId)
+  })
+}
+
+export const markAttendance = async (
+  sessionId: string,
+  studentId: string,
+  status: 'present' | 'late' = 'present'
+) => {
   // Check if already marked
   const existing = await db.query.attendance.findFirst({
     where: and(eq(attendance.sessionId, sessionId), eq(attendance.studentId, studentId))
@@ -233,7 +243,7 @@ export const markAttendance = async (sessionId: string, studentId: string) => {
       id: crypto.randomUUID(),
       sessionId,
       studentId,
-      status: 'present'
+      status
     })
     .returning()
 }
