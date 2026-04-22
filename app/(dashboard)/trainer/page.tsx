@@ -12,6 +12,7 @@ import {
   TableHeader,
   TableRow
 } from '@/components/ui/table'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 
 interface Batch {
   id: string
@@ -48,46 +49,51 @@ const TrainerPage = () => {
 
   return (
     <div className="px-2 space-y-4">
-      <div className="flex items-center justify-between">
-        <h2 className="text-lg font-semibold">My Batches</h2>
-      </div>
-
-      {loading ? (
-        <div className="flex items-center justify-center py-8">
-          <Loader2 className="size-6 animate-spin text-muted-foreground" />
-        </div>
-      ) : batches.length === 0 ? (
-        <p className="text-muted-foreground text-sm py-8 text-center">
-          You are not assigned to any batches yet.
-        </p>
-      ) : (
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Name</TableHead>
-              <TableHead>Created At</TableHead>
-              <TableHead>Invite Link</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {batches.map((batch) => (
-              <TableRow key={batch.id}>
-                <TableCell>{batch.name}</TableCell>
-                <TableCell>
-                  {new Date(batch.createdAt).toLocaleDateString('en-IN', {
-                    day: 'numeric',
-                    month: 'short',
-                    year: 'numeric'
-                  })}
-                </TableCell>
-                <TableCell>
-                  <BatchInviteDialog batchId={batch.id} batchName={batch.name} />
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      )}
+      <Tabs defaultValue="batches">
+        <TabsList>
+          <TabsTrigger value="batches">My Batches</TabsTrigger>
+          <TabsTrigger value="sessions">Sessions</TabsTrigger>
+        </TabsList>
+        <TabsContent value="batches">
+          {loading ? (
+            <div className="flex items-center justify-center py-8">
+              <Loader2 className="size-6 animate-spin text-muted-foreground" />
+            </div>
+          ) : batches.length === 0 ? (
+            <p className="text-muted-foreground text-sm py-8 text-center">
+              You are not assigned to any batches yet.
+            </p>
+          ) : (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Name</TableHead>
+                  <TableHead>Created At</TableHead>
+                  <TableHead>Invite Link</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {batches.map((batch) => (
+                  <TableRow key={batch.id}>
+                    <TableCell>{batch.name}</TableCell>
+                    <TableCell>
+                      {new Date(batch.createdAt).toLocaleDateString('en-IN', {
+                        day: 'numeric',
+                        month: 'short',
+                        year: 'numeric'
+                      })}
+                    </TableCell>
+                    <TableCell>
+                      <BatchInviteDialog batchId={batch.id} batchName={batch.name} />
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          )}
+        </TabsContent>
+        <TabsContent value="sessions">Todo</TabsContent>
+      </Tabs>
     </div>
   )
 }
