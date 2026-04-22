@@ -280,3 +280,57 @@ export const getAttendanceBySession = async (sessionId: string) => {
     where: eq(attendance.sessionId, sessionId)
   })
 }
+
+export const getBatchAttendanceSummary = async (batchId: string) => {
+  const allSessions = await db.query.session.findMany({
+    where: eq(session.batchId, batchId)
+  })
+
+  // Only consider completed sessions (end time has passed)
+  const now = new Date()
+  const sessions = allSessions.filter((s) => {
+    const sessionEnd = new Date(`${s.date}T${s.endTime}`)
+    return sessionEnd <= now
+  })
+
+  const totalSessions = sessions.length
+  if (totalSessions === 0) {
+    return { totalSessions: 0, presentPercent: 0, latePercent: 0, absentPercent: 0 }
+  }
+
+  const studentAssignments = await db.query.batchStudents.findMany({
+    where: eq(batchStudents.batchId, batchId)
+  })
+
+  const totalStudents = studentAssignments.length
+  if (totalStudents === 0) {
+    return { totalSessions, presentPercent: 0, latePercent: 0, absentPercent: 0 }
+  }
+
+  const sessionIds = sessions.map((s) => s.id)
+  const attendanceRecords = await db.query.attendance.findMany({
+    where: inArray(attendance.sessionId, sessionIds)
+  })
+
+  // Total possible attendance slots = sessions * students
+  const totalSlots = totalSessions * totalStudents
+
+  let presentCount = 0
+  let lateCount = 0
+
+  for (const record of attendanceRecords) {
+    if (record.status === 'present') presentCount++
+    else if (record.status === 'late') lateCount++
+
+    const presentPercent = Math.round((presentCount / totalSlots) * 100)
+    const latePercent = Math.round((lateCount / totalSlots) * 100)
+    const absentPercent = 100 - presentPercent - latePercent
+
+    return {
+      totalSessions,
+      presentPercent,
+      latePercent,
+      absentPercent
+    }
+  }
+}

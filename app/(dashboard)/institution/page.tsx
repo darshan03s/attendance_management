@@ -27,9 +27,19 @@ interface Trainer {
   name: string
 }
 
+interface AttendanceSummary {
+  totalSessions: number
+  presentPercent: number
+  latePercent: number
+  absentPercent: number
+}
+
 const InstitutionPage = () => {
   const [batches, setBatches] = useState<Batch[]>([])
   const [batchTrainersMap, setBatchTrainersMap] = useState<Record<string, Trainer[]>>({})
+  const [attendanceSummaryMap, setAttendanceSummaryMap] = useState<
+    Record<string, AttendanceSummary>
+  >({})
   const [loading, setLoading] = useState(true)
 
   const fetchBatchTrainers = useCallback(async (batchList: Batch[]) => {
@@ -55,6 +65,32 @@ const InstitutionPage = () => {
     setBatchTrainersMap(map)
   }, [])
 
+  const fetchAttendanceSummaries = useCallback(async (batchList: Batch[]) => {
+    const results = await Promise.all(
+      batchList.map(async (b) => {
+        try {
+          const res = await fetch(`/api/batches/${b.id}/attendance-summary`)
+          if (res.ok) {
+            const { data } = await res.json()
+            return { batchId: b.id, summary: data as AttendanceSummary }
+          }
+        } catch {
+          // ignore per-batch errors
+        }
+        return {
+          batchId: b.id,
+          summary: { totalSessions: 0, presentPercent: 0, latePercent: 0, absentPercent: 0 }
+        }
+      })
+    )
+
+    const map: Record<string, AttendanceSummary> = {}
+    for (const r of results) {
+      map[r.batchId] = r.summary
+    }
+    setAttendanceSummaryMap(map)
+  }, [])
+
   const fetchBatches = useCallback(async () => {
     setLoading(true)
     try {
@@ -66,13 +102,13 @@ const InstitutionPage = () => {
       }
       const { data } = await res.json()
       setBatches(data)
-      await fetchBatchTrainers(data)
+      await Promise.all([fetchBatchTrainers(data), fetchAttendanceSummaries(data)])
     } catch {
       toast.error('Something went wrong')
     } finally {
       setLoading(false)
     }
-  }, [fetchBatchTrainers])
+  }, [fetchBatchTrainers, fetchAttendanceSummaries])
 
   useEffect(() => {
     fetchBatches()
@@ -109,6 +145,7 @@ const InstitutionPage = () => {
             <TableRow>
               <TableHead>Name</TableHead>
               <TableHead>Trainers</TableHead>
+              <TableHead>Attendance Summary</TableHead>
               <TableHead>Created At</TableHead>
             </TableRow>
           </TableHeader>
@@ -125,6 +162,26 @@ const InstitutionPage = () => {
                       onAssigned={fetchBatches}
                     />
                   </div>
+                </TableCell>
+                <TableCell>
+                  {(() => {
+                    const summary = attendanceSummaryMap[batch.id]
+                    if (!summary || summary.totalSessions === 0) {
+                      return <span className="text-muted-foreground text-xs">No sessions</span>
+                    }
+                    return (
+                      <div className="text-xs space-y-0.5">
+                        <div className="text-muted-foreground">
+                          {summary.totalSessions} session{summary.totalSessions !== 1 ? 's' : ''}
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <span className="text-green-600">{summary.presentPercent}% present</span>
+                          <span className="text-yellow-500">{summary.latePercent}% late</span>
+                          <span className="text-red-500">{summary.absentPercent}% absent</span>
+                        </div>
+                      </div>
+                    )
+                  })()}
                 </TableCell>
                 <TableCell>
                   {new Date(batch.createdAt).toLocaleDateString('en-IN', {
