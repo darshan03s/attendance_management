@@ -1,4 +1,4 @@
-import { eq } from 'drizzle-orm'
+import { and, eq, isNull } from 'drizzle-orm'
 import { db } from '.'
 import { batch, user } from './schema'
 import { UserRole } from '@/types'
@@ -41,5 +41,21 @@ export const createBatch = async (name: string, institutionId: string) => {
 export const getBatchesByInstitution = async (institutionId: string) => {
   return await db.query.batch.findMany({
     where: eq(batch.institutionId, institutionId)
+  })
+}
+
+export const assignTrainerToInstitution = async (trainerId: string, institutionId: string) => {
+  return await db.update(user).set({ institutionId }).where(eq(user.id, trainerId)).returning()
+}
+
+export const getTrainersByInstitution = async (institutionId: string) => {
+  return await db.query.user.findMany({
+    where: and(eq(user.role, 'trainer'), eq(user.institutionId, institutionId))
+  })
+}
+
+export const getUnassignedTrainers = async () => {
+  return await db.query.user.findMany({
+    where: and(eq(user.role, 'trainer'), isNull(user.institutionId))
   })
 }

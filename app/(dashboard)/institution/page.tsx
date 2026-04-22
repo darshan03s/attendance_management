@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from 'react'
 import { toast } from 'sonner'
 import { Loader2 } from 'lucide-react'
 import CreateBatch from '@/components/create-batch'
+import ManageTrainers from '@/components/manage-trainers'
 import {
   Table,
   TableBody,
@@ -50,7 +51,10 @@ const InstitutionPage = () => {
     <div className="px-2 space-y-4">
       <div className="flex items-center justify-between">
         <h2 className="text-lg font-semibold">Batches</h2>
-        <CreateBatch onBatchCreated={fetchBatches} />
+        <div className="flex items-center gap-2">
+          <ManageTrainers />
+          <CreateBatch onBatchCreated={fetchBatches} />
+        </div>
       </div>
 
       {loading ? (
