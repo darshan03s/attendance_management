@@ -1,6 +1,6 @@
 import { and, eq, inArray, isNull } from 'drizzle-orm'
 import { db } from '.'
-import { batch, batchInvite, batchStudents, batchTrainers, user } from './schema'
+import { batch, batchInvite, batchStudents, batchTrainers, session, user } from './schema'
 import { UserRole } from '@/types'
 
 export const getUserById = async (userId: string) => {
@@ -162,4 +162,45 @@ export const getBatchesByStudent = async (studentId: string) => {
   return await db.query.batch.findMany({
     where: inArray(batch.id, batchIds)
   })
+}
+
+export const createSession = async (
+  batchId: string,
+  trainerId: string,
+  date: string,
+  startTime: string,
+  endTime: string
+) => {
+  return await db
+    .insert(session)
+    .values({
+      id: crypto.randomUUID(),
+      batchId,
+      trainerId,
+      title: `Session - ${date}`,
+      date,
+      startTime,
+      endTime
+    })
+    .returning()
+}
+
+export const getSessionsByTrainer = async (trainerId: string) => {
+  const sessions = await db.query.session.findMany({
+    where: eq(session.trainerId, trainerId)
+  })
+
+  if (sessions.length === 0) return []
+
+  // Enrich with batch names
+  const batchIds = [...new Set(sessions.map((s) => s.batchId))]
+  const batches = await db.query.batch.findMany({
+    where: inArray(batch.id, batchIds)
+  })
+  const batchMap = new Map(batches.map((b) => [b.id, b.name]))
+
+  return sessions.map((s) => ({
+    ...s,
+    batchName: batchMap.get(s.batchId) ?? 'Unknown'
+  }))
 }
