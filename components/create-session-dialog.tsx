@@ -23,12 +23,14 @@ interface CreateSessionDialogProps {
 
 const CreateSessionDialog = ({ batchId, batchName, onCreated }: CreateSessionDialogProps) => {
   const [open, setOpen] = useState(false)
+  const [name, setName] = useState('')
   const [date, setDate] = useState('')
   const [startTime, setStartTime] = useState('')
   const [endTime, setEndTime] = useState('')
   const [submitting, setSubmitting] = useState(false)
 
   const resetForm = () => {
+    setName('')
     setDate('')
     setStartTime('')
     setEndTime('')
@@ -45,7 +47,7 @@ const CreateSessionDialog = ({ batchId, batchName, onCreated }: CreateSessionDia
       const res = await fetch('/api/sessions', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ batchId, date, startTime, endTime })
+        body: JSON.stringify({ batchId, name: name || undefined, date, startTime, endTime })
       })
 
       if (!res.ok) {
@@ -87,6 +89,16 @@ const CreateSessionDialog = ({ batchId, batchName, onCreated }: CreateSessionDia
         </DialogHeader>
 
         <div className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="session-name">Session Name</Label>
+            <Input
+              id="session-name"
+              type="text"
+              placeholder="e.g. React Basics, Git Workshop"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+            />
+          </div>
           <div className="space-y-2">
             <Label htmlFor="session-date">Date</Label>
             <Input

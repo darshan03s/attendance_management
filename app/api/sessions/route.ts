@@ -15,7 +15,7 @@ export async function POST(request: NextRequest) {
   }
 
   const body = await request.json()
-  const { batchId, date, startTime, endTime } = body
+  const { batchId, name, date, startTime, endTime } = body
 
   if (!batchId || !date || !startTime || !endTime) {
     return NextResponse.json(
@@ -31,7 +31,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'You are not assigned to this batch' }, { status: 403 })
   }
 
-  const [created] = await createSession(batchId, userId, date, startTime, endTime)
+  const [created] = await createSession(batchId, userId, date, startTime, endTime, name)
 
   return NextResponse.json({ data: created }, { status: 201 })
 }

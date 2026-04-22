@@ -177,7 +177,8 @@ export const createSession = async (
   trainerId: string,
   date: string,
   startTime: string,
-  endTime: string
+  endTime: string,
+  name?: string
 ) => {
   return await db
     .insert(session)
@@ -185,7 +186,7 @@ export const createSession = async (
       id: crypto.randomUUID(),
       batchId,
       trainerId,
-      title: `Session - ${date}`,
+      title: name || `Session - ${date}`,
       date,
       startTime,
       endTime
