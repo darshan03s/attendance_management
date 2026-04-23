@@ -338,7 +338,7 @@ export const getInstitutionAttendanceSummary = async (institutionId: string) => 
 
     // Only completed sessions
     const completedSessions = allSessions.filter((s) => {
-      const sessionEnd = new Date(`${s.date}T${s.endTime}`)
+      const sessionEnd = new Date(`${s.date}T${s.endTime}:00+05:30`)
       return sessionEnd <= now
     })
 
@@ -470,7 +470,7 @@ export const getBatchAttendanceSummary = async (batchId: string) => {
   // Only consider completed sessions (end time has passed)
   const now = new Date()
   const sessions = allSessions.filter((s) => {
-    const sessionEnd = new Date(`${s.date}T${s.endTime}`)
+    const sessionEnd = new Date(`${s.date}T${s.endTime}:00+05:30`)
     return sessionEnd <= now
   })
 
