@@ -5,18 +5,20 @@ import {
   getTrainerBatchAssignment,
   getUserById
 } from '@/db/utils'
+import { currentUser } from '@clerk/nextjs/server'
 import { NextRequest, NextResponse } from 'next/server'
 
 export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  const userId = request.headers.get('x-user-id')
+  const clerkUser = await currentUser()
 
-  if (!userId) {
+  if (!clerkUser) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
-  const currentUser = await getUserById(userId)
+  const userId = clerkUser.id
+  const user = await getUserById(userId)
 
-  if (!currentUser || currentUser.role !== 'trainer') {
+  if (!user || user.role !== 'trainer') {
     return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
   }
 

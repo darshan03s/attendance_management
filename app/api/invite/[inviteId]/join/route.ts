@@ -1,19 +1,21 @@
 import { addStudentToBatch, checkStudentInBatch, getInviteById, getUserById } from '@/db/utils'
+import { currentUser } from '@clerk/nextjs/server'
 import { NextRequest, NextResponse } from 'next/server'
 
 export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ inviteId: string }> }
 ) {
-  const userId = request.headers.get('x-user-id')
+  const clerkUser = await currentUser()
 
-  if (!userId) {
+  if (!clerkUser) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
-  const currentUser = await getUserById(userId)
+  const userId = clerkUser.id
+  const user = await getUserById(userId)
 
-  if (!currentUser || currentUser.role !== 'student') {
+  if (!user || user.role !== 'student') {
     return NextResponse.json({ error: 'Only students can join batches' }, { status: 403 })
   }
 

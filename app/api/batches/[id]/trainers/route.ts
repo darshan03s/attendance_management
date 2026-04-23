@@ -1,16 +1,18 @@
 import { addBatchTrainers, getBatchById, getTrainersByBatch, getUserById } from '@/db/utils'
+import { currentUser } from '@clerk/nextjs/server'
 import { NextRequest, NextResponse } from 'next/server'
 
 export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  const userId = request.headers.get('x-user-id')
+  const clerkUser = await currentUser()
 
-  if (!userId) {
+  if (!clerkUser) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
-  const currentUser = await getUserById(userId)
+  const userId = clerkUser.id
+  const user = await getUserById(userId)
 
-  if (!currentUser || currentUser.role !== 'institution') {
+  if (!user || user.role !== 'institution') {
     return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
   }
 
@@ -21,7 +23,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     return NextResponse.json({ error: 'Batch not found' }, { status: 404 })
   }
 
-  if (batch.institutionId !== currentUser.id) {
+  if (batch.institutionId !== user.id) {
     return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
   }
 
@@ -31,15 +33,16 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
 }
 
 export async function POST(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  const userId = request.headers.get('x-user-id')
+  const clerkUser = await currentUser()
 
-  if (!userId) {
+  if (!clerkUser) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
-  const currentUser = await getUserById(userId)
+  const userId = clerkUser.id
+  const user = await getUserById(userId)
 
-  if (!currentUser || currentUser.role !== 'institution') {
+  if (!user || user.role !== 'institution') {
     return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
   }
 
@@ -50,7 +53,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     return NextResponse.json({ error: 'Batch not found' }, { status: 404 })
   }
 
-  if (batch.institutionId !== currentUser.id) {
+  if (batch.institutionId !== user.id) {
     return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
   }
 
@@ -76,7 +79,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
       return NextResponse.json({ error: `User ${trainerId} is not a trainer` }, { status: 400 })
     }
 
-    if (trainer.institutionId !== currentUser.id) {
+    if (trainer.institutionId !== user.id) {
       return NextResponse.json(
         { error: `Trainer ${trainerId} does not belong to your institution` },
         { status: 400 }

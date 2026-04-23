@@ -27,9 +27,7 @@ export default clerkMiddleware(async (auth, request) => {
 
   // Allow API routes through without DB check (the API handles its own logic)
   if (isApiRoute(request)) {
-    const headers = new Headers(request.headers)
-    headers.set('x-user-id', userId)
-    return NextResponse.next({ request: { headers } })
+    return NextResponse.next()
   }
 
   // Check if user exists in DB (has completed onboarding)
@@ -65,10 +63,7 @@ export default clerkMiddleware(async (auth, request) => {
     }
   }
 
-  const headers = new Headers(request.headers)
-  headers.set('x-user-id', userId)
-
-  return NextResponse.next({ request: { headers } })
+  return NextResponse.next()
 })
 
 export const config = {

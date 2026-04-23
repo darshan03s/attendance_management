@@ -1,13 +1,14 @@
 import { getBatchById, getInviteById } from '@/db/utils'
+import { currentUser } from '@clerk/nextjs/server'
 import { NextRequest, NextResponse } from 'next/server'
 
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ inviteId: string }> }
 ) {
-  const userId = request.headers.get('x-user-id')
+  const clerkUser = await currentUser()
 
-  if (!userId) {
+  if (!clerkUser) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 

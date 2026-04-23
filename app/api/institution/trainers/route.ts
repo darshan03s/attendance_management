@@ -1,16 +1,18 @@
 import { assignTrainerToInstitution, getUserById, getTrainersByInstitution } from '@/db/utils'
+import { currentUser } from '@clerk/nextjs/server'
 import { NextRequest, NextResponse } from 'next/server'
 
 export async function POST(request: NextRequest) {
-  const userId = request.headers.get('x-user-id')
+  const clerkUser = await currentUser()
 
-  if (!userId) {
+  if (!clerkUser) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
-  const currentUser = await getUserById(userId)
+  const userId = clerkUser.id
+  const user = await getUserById(userId)
 
-  if (!currentUser || currentUser.role !== 'institution') {
+  if (!user || user.role !== 'institution') {
     return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
   }
 
@@ -38,25 +40,26 @@ export async function POST(request: NextRequest) {
     )
   }
 
-  const updated = await assignTrainerToInstitution(trainerId, currentUser.id)
+  const updated = await assignTrainerToInstitution(trainerId, user.id)
 
   return NextResponse.json({ data: { trainer: updated[0] } }, { status: 200 })
 }
 
-export async function GET(request: NextRequest) {
-  const userId = request.headers.get('x-user-id')
+export async function GET() {
+  const clerkUser = await currentUser()
 
-  if (!userId) {
+  if (!clerkUser) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
-  const currentUser = await getUserById(userId)
+  const userId = clerkUser.id
+  const user = await getUserById(userId)
 
-  if (!currentUser || currentUser.role !== 'institution') {
+  if (!user || user.role !== 'institution') {
     return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
   }
 
-  const trainers = await getTrainersByInstitution(currentUser.id)
+  const trainers = await getTrainersByInstitution(user.id)
 
   return NextResponse.json({ data: { trainers } })
 }

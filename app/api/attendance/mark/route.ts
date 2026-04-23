@@ -5,18 +5,20 @@ import {
   getUserById,
   markAttendance
 } from '@/db/utils'
+import { currentUser } from '@clerk/nextjs/server'
 import { NextRequest, NextResponse } from 'next/server'
 
 export async function POST(request: NextRequest) {
-  const userId = request.headers.get('x-user-id')
+  const clerkUser = await currentUser()
 
-  if (!userId) {
+  if (!clerkUser) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
-  const currentUser = await getUserById(userId)
+  const userId = clerkUser.id
+  const user = await getUserById(userId)
 
-  if (!currentUser || currentUser.role !== 'student') {
+  if (!user || user.role !== 'student') {
     return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
   }
 
