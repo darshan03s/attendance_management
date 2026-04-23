@@ -1,4 +1,4 @@
-import { and, eq, inArray, isNull } from 'drizzle-orm'
+import { and, eq, inArray, isNull, lt, gt } from 'drizzle-orm'
 import { db } from '.'
 import {
   attendance,
@@ -192,6 +192,22 @@ export const createSession = async (
       endTime
     })
     .returning()
+}
+
+export const getOverlappingSessions = async (
+  batchId: string,
+  date: string,
+  startTime: string,
+  endTime: string
+) => {
+  return await db.query.session.findMany({
+    where: and(
+      eq(session.batchId, batchId),
+      eq(session.date, date),
+      lt(session.startTime, endTime),
+      gt(session.endTime, startTime)
+    )
+  })
 }
 
 export const getSessionsByTrainer = async (trainerId: string) => {
