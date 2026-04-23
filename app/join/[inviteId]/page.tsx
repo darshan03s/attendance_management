@@ -61,7 +61,7 @@ const JoinPage = () => {
   const handleJoin = async () => {
     setJoining(true)
     try {
-      const res = await fetch(`/api/invite/${inviteId}/join`, { method: 'POST' })
+      const res = await fetch(`/api/batches/${inviteId}/join`, { method: 'POST' })
       if (!res.ok) {
         const data = await res.json()
         toast.error(data.error || 'Failed to join batch')
