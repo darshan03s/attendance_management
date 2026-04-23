@@ -184,7 +184,7 @@ const TrainerPage = () => {
                       })}
                     </TableCell>
                     <TableCell>
-                      {new Date(`${session.date}T${session.startTime}`) <= new Date() ? (
+                      {new Date(`${session.date}T${session.startTime}:00+05:30`) <= new Date() ? (
                         <SessionAttendanceDialog
                           sessionId={session.id}
                           batchName={session.batchName}

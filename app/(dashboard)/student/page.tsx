@@ -30,8 +30,8 @@ interface Batch {
 type AttendanceWindow = 'not_started' | 'present' | 'late' | 'closed'
 
 function getAttendanceWindow(session: Session, now: Date): AttendanceWindow {
-  const sessionStart = new Date(`${session.date}T${session.startTime}`)
-  const sessionEnd = new Date(`${session.date}T${session.endTime}`)
+  const sessionStart = new Date(`${session.date}T${session.startTime}:00+05:30`)
+  const sessionEnd = new Date(`${session.date}T${session.endTime}:00+05:30`)
   const lateThreshold = new Date(sessionStart.getTime() + 15 * 60 * 1000)
 
   if (now < sessionStart) return 'not_started'
@@ -43,8 +43,8 @@ function getAttendanceWindow(session: Session, now: Date): AttendanceWindow {
 type SessionStatus = 'live' | 'upcoming' | 'completed'
 
 function getSessionStatus(session: Session, now: Date): SessionStatus {
-  const sessionStart = new Date(`${session.date}T${session.startTime}`)
-  const sessionEnd = new Date(`${session.date}T${session.endTime}`)
+  const sessionStart = new Date(`${session.date}T${session.startTime}:00+05:30`)
+  const sessionEnd = new Date(`${session.date}T${session.endTime}:00+05:30`)
 
   if (now >= sessionStart && now <= sessionEnd) return 'live'
   if (now < sessionStart) return 'upcoming'
