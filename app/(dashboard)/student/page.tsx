@@ -59,8 +59,8 @@ function getNextOrCurrentSession(
 
   // Sort sessions by date and start time
   const sorted = [...sessions].sort((a, b) => {
-    const aTime = new Date(`${a.date}T${a.startTime}`).getTime()
-    const bTime = new Date(`${b.date}T${b.startTime}`).getTime()
+    const aTime = new Date(`${a.date}T${a.startTime}:00+05:30`).getTime()
+    const bTime = new Date(`${b.date}T${b.startTime}:00+05:30`).getTime()
     return aTime - bTime
   })
 
