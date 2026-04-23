@@ -29,7 +29,7 @@ export async function POST(request: Request) {
   const existingUser = await getUserById(clerkUser.id)
 
   if (existingUser) {
-    return NextResponse.json({ error: 'User already exists' }, { status: 409 })
+    return NextResponse.json(existingUser, { status: 200 })
   }
 
   const newUser = await addNewUser(
