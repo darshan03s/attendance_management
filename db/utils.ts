@@ -281,6 +281,98 @@ export const getAttendanceBySession = async (sessionId: string) => {
   })
 }
 
+export const getAllInstitutions = async () => {
+  return await db.query.user.findMany({
+    where: eq(user.role, 'institution')
+  })
+}
+
+export const getInstitutionAttendanceSummary = async (institutionId: string) => {
+  // 1. Get all batches for this institution
+  const batches = await db.query.batch.findMany({
+    where: eq(batch.institutionId, institutionId)
+  })
+
+  const totalBatches = batches.length
+  if (totalBatches === 0) {
+    return {
+      totalBatches: 0,
+      totalSessions: 0,
+      presentPercent: 0,
+      latePercent: 0,
+      absentPercent: 0
+    }
+  }
+
+  let totalSessions = 0
+  let totalSlots = 0
+  let presentCount = 0
+  let lateCount = 0
+
+  const now = new Date()
+
+  // 2. For each batch, aggregate counts
+  for (const b of batches) {
+    const allSessions = await db.query.session.findMany({
+      where: eq(session.batchId, b.id)
+    })
+
+    // Only completed sessions
+    const completedSessions = allSessions.filter((s) => {
+      const sessionEnd = new Date(`${s.date}T${s.endTime}`)
+      return sessionEnd <= now
+    })
+
+    const batchSessionCount = completedSessions.length
+    if (batchSessionCount === 0) continue
+
+    const studentAssignments = await db.query.batchStudents.findMany({
+      where: eq(batchStudents.batchId, b.id)
+    })
+
+    const batchStudentCount = studentAssignments.length
+    if (batchStudentCount === 0) {
+      totalSessions += batchSessionCount
+      continue
+    }
+
+    totalSessions += batchSessionCount
+    totalSlots += batchSessionCount * batchStudentCount
+
+    const sessionIds = completedSessions.map((s) => s.id)
+    const attendanceRecords = await db.query.attendance.findMany({
+      where: inArray(attendance.sessionId, sessionIds)
+    })
+
+    for (const record of attendanceRecords) {
+      if (record.status === 'present') presentCount++
+      else if (record.status === 'late') lateCount++
+    }
+  }
+
+  if (totalSlots === 0) {
+    return {
+      totalBatches,
+      totalSessions,
+      presentPercent: 0,
+      latePercent: 0,
+      absentPercent: 0
+    }
+  }
+
+  const presentPercent = Math.round((presentCount / totalSlots) * 100)
+  const latePercent = Math.round((lateCount / totalSlots) * 100)
+  const absentPercent = 100 - presentPercent - latePercent
+
+  return {
+    totalBatches,
+    totalSessions,
+    presentPercent,
+    latePercent,
+    absentPercent
+  }
+}
+
 export const getBatchAttendanceSummary = async (batchId: string) => {
   const allSessions = await db.query.session.findMany({
     where: eq(session.batchId, batchId)
