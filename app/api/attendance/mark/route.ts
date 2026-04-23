@@ -48,8 +48,8 @@ export async function POST(request: NextRequest) {
   }
 
   // Compute time windows
-  const sessionStart = new Date(`${sessionData.date}T${sessionData.startTime}`)
-  const sessionEnd = new Date(`${sessionData.date}T${sessionData.endTime}`)
+  const sessionStart = new Date(`${sessionData.date}T${sessionData.startTime}:00`)
+  const sessionEnd = new Date(`${sessionData.date}T${sessionData.endTime}:00`)
   const lateThreshold = new Date(sessionStart.getTime() + 15 * 60 * 1000) // +15 minutes
   const now = new Date()
 
