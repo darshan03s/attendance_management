@@ -49,7 +49,8 @@ const Onboarding = () => {
         throw new Error(data.error || 'Failed to save role')
       }
 
-      router.push('/')
+      router.replace('/')
+      router.refresh()
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Something went wrong')
     } finally {
