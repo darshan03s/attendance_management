@@ -298,6 +298,9 @@ export const getInstitutionAttendanceSummary = async (institutionId: string) => 
     return {
       totalBatches: 0,
       totalSessions: 0,
+      totalSlots: 0,
+      presentCount: 0,
+      lateCount: 0,
       presentPercent: 0,
       latePercent: 0,
       absentPercent: 0
@@ -354,6 +357,9 @@ export const getInstitutionAttendanceSummary = async (institutionId: string) => 
     return {
       totalBatches,
       totalSessions,
+      totalSlots: 0,
+      presentCount: 0,
+      lateCount: 0,
       presentPercent: 0,
       latePercent: 0,
       absentPercent: 0
@@ -367,9 +373,76 @@ export const getInstitutionAttendanceSummary = async (institutionId: string) => 
   return {
     totalBatches,
     totalSessions,
+    totalSlots,
+    presentCount,
+    lateCount,
     presentPercent,
     latePercent,
     absentPercent
+  }
+}
+
+export const getProgrammeAttendanceSummary = async () => {
+  const institutions = await getAllInstitutions()
+
+  const totalInstitutions = institutions.length
+
+  let totalBatches = 0
+  let totalSessions = 0
+  let totalSlots = 0
+  let presentCount = 0
+  let lateCount = 0
+
+  const institutionDetails: {
+    institutionId: string
+    name: string
+    totalBatches: number
+    totalSessions: number
+    presentPercent: number
+    latePercent: number
+    absentPercent: number
+  }[] = []
+
+  for (const inst of institutions) {
+    const summary = await getInstitutionAttendanceSummary(inst.id)
+
+    totalBatches += summary.totalBatches
+    totalSessions += summary.totalSessions
+    totalSlots += summary.totalSlots
+    presentCount += summary.presentCount
+    lateCount += summary.lateCount
+
+    institutionDetails.push({
+      institutionId: inst.id,
+      name: inst.name,
+      totalBatches: summary.totalBatches,
+      totalSessions: summary.totalSessions,
+      presentPercent: summary.presentPercent,
+      latePercent: summary.latePercent,
+      absentPercent: summary.absentPercent
+    })
+  }
+
+  let overallPresentPercent = 0
+  let overallLatePercent = 0
+  let overallAbsentPercent = 0
+
+  if (totalSlots > 0) {
+    overallPresentPercent = Math.round((presentCount / totalSlots) * 100)
+    overallLatePercent = Math.round((lateCount / totalSlots) * 100)
+    overallAbsentPercent = 100 - overallPresentPercent - overallLatePercent
+  }
+
+  return {
+    overall: {
+      totalInstitutions,
+      totalBatches,
+      totalSessions,
+      presentPercent: overallPresentPercent,
+      latePercent: overallLatePercent,
+      absentPercent: overallAbsentPercent
+    },
+    institutions: institutionDetails
   }
 }
 
