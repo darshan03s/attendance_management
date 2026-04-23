@@ -28,7 +28,7 @@ export const addNewUser = async (
     .insert(user)
     .values({
       id: userId,
-      name: `${firstName ?? ''} ${lastName ?? ''}`.trim() || 'Unknown',
+      name: `${firstName ?? ''} ${lastName ?? ''}`.trim() || email.split('@')[0],
       email: email,
       role
     })
