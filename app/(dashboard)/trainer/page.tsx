@@ -29,6 +29,7 @@ interface Session {
   batchId: string
   trainerId: string
   batchName: string
+  title: string
   date: string
   startTime: string
   endTime: string
@@ -153,6 +154,7 @@ const TrainerPage = () => {
               <TableHeader>
                 <TableRow>
                   <TableHead>Batch</TableHead>
+                  <TableHead>Name</TableHead>
                   <TableHead>Date</TableHead>
                   <TableHead>Start Time</TableHead>
                   <TableHead>End Time</TableHead>
@@ -164,6 +166,7 @@ const TrainerPage = () => {
                 {sessions.map((session) => (
                   <TableRow key={session.id}>
                     <TableCell>{session.batchName}</TableCell>
+                    <TableCell>{session.title}</TableCell>
                     <TableCell>
                       {new Date(session.date).toLocaleDateString('en-IN', {
                         day: 'numeric',
