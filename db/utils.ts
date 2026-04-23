@@ -321,16 +321,16 @@ export const getBatchAttendanceSummary = async (batchId: string) => {
   for (const record of attendanceRecords) {
     if (record.status === 'present') presentCount++
     else if (record.status === 'late') lateCount++
+  }
 
-    const presentPercent = Math.round((presentCount / totalSlots) * 100)
-    const latePercent = Math.round((lateCount / totalSlots) * 100)
-    const absentPercent = 100 - presentPercent - latePercent
+  const presentPercent = Math.round((presentCount / totalSlots) * 100)
+  const latePercent = Math.round((lateCount / totalSlots) * 100)
+  const absentPercent = 100 - presentPercent - latePercent
 
-    return {
-      totalSessions,
-      presentPercent,
-      latePercent,
-      absentPercent
-    }
+  return {
+    totalSessions,
+    presentPercent,
+    latePercent,
+    absentPercent
   }
 }
