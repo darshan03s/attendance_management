@@ -1,4 +1,4 @@
-import { boolean, pgEnum, pgTable, text, timestamp } from 'drizzle-orm/pg-core'
+import { boolean, pgEnum, pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core'
 
 export const userRole = pgEnum('user_role', [
   'student',
@@ -20,24 +20,40 @@ export const user = pgTable('user', {
 export const batch = pgTable('batch', {
   id: text('id').primaryKey(),
   name: text('name').notNull(),
-  institutionId: text('institutionId').notNull(),
+  institutionId: text('institutionId')
+    .notNull()
+    .references(() => user.id, { onDelete: 'cascade' }),
   createdAt: timestamp('createdAt').defaultNow()
 })
 
 export const batchTrainers = pgTable('batch_trainers', {
-  batchId: text('batchId').notNull(),
-  trainerId: text('trainerId').notNull()
+  id: uuid('id').primaryKey().defaultRandom(),
+  batchId: text('batchId')
+    .notNull()
+    .references(() => batch.id, { onDelete: 'cascade' }),
+  trainerId: text('trainerId')
+    .notNull()
+    .references(() => user.id, { onDelete: 'cascade' })
 })
 
 export const batchStudents = pgTable('batch_students', {
-  batchId: text('batchId').notNull(),
-  studentId: text('studentId').notNull()
+  id: uuid('id').primaryKey().defaultRandom(),
+  batchId: text('batchId')
+    .notNull()
+    .references(() => batch.id, { onDelete: 'cascade' }),
+  studentId: text('studentId')
+    .notNull()
+    .references(() => user.id, { onDelete: 'cascade' })
 })
 
 export const session = pgTable('session', {
   id: text('id').primaryKey(),
-  batchId: text('batchId').notNull(),
-  trainerId: text('trainerId').notNull(),
+  batchId: text('batchId')
+    .notNull()
+    .references(() => batch.id, { onDelete: 'cascade' }),
+  trainerId: text('trainerId')
+    .notNull()
+    .references(() => user.id, { onDelete: 'cascade' }),
   title: text('title').notNull(),
   date: text('date').notNull(),
   startTime: text('startTime').notNull(),
@@ -49,15 +65,23 @@ export const attendanceStatus = pgEnum('attendance_status', ['present', 'absent'
 
 export const attendance = pgTable('attendance', {
   id: text('id').primaryKey(),
-  sessionId: text('sessionId').notNull(),
-  studentId: text('studentId').notNull(),
+  sessionId: text('sessionId')
+    .notNull()
+    .references(() => session.id, { onDelete: 'cascade' }),
+  studentId: text('studentId')
+    .notNull()
+    .references(() => user.id, { onDelete: 'cascade' }),
   status: attendanceStatus('status').notNull(),
   markedAt: timestamp('markedAt').defaultNow()
 })
 
 export const batchInvite = pgTable('batch_invite', {
   id: text('id').primaryKey(),
-  batchId: text('batchId').notNull(),
-  createdBy: text('createdBy').notNull(),
+  batchId: text('batchId')
+    .notNull()
+    .references(() => batch.id, { onDelete: 'cascade' }),
+  createdBy: text('createdBy')
+    .notNull()
+    .references(() => user.id, { onDelete: 'cascade' }),
   isActive: boolean('isActive').default(true)
 })
